@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Search, ShoppingBag, User } from 'lucide-react-native';
+import { Home, Search, ShoppingCart, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#10B981',
+        tabBarActiveTintColor: '#FFA500',
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -38,9 +38,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'Orders',
+          title: 'Cart',
           tabBarIcon: ({ size, color }) => (
-            <ShoppingBag size={size} color={color} />
+            <ShoppingCart size={size} color={color} />
           ),
         }}
       />

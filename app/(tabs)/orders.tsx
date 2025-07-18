@@ -8,245 +8,150 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Clock, MapPin, ShoppingBag, Star, Repeat } from 'lucide-react-native';
+import { ArrowLeft, Minus, Plus, X } from 'lucide-react-native';
 
-interface Order {
+interface CartItem {
   id: string;
-  status: 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
-  orderNumber: string;
-  date: string;
-  shop: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-    image: string;
-  }>;
-  total: number;
-  deliveryAddress: string;
-  deliveryTime: string;
-  rating?: number;
+  name: string;
+  price: number;
+  quantity: number;
+  weight: string;
+  image: string;
 }
 
-const mockOrders: Order[] = [
+const cartItems: CartItem[] = [
   {
     id: '1',
-    status: 'out_for_delivery',
-    orderNumber: 'GD001234',
-    date: '2025-01-14',
-    shop: 'Green Valley Market',
-    items: [
-      { name: 'Organic Apples', quantity: 2, price: 4.99, image: 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=100' },
-      { name: 'Fresh Spinach', quantity: 1, price: 2.49, image: 'https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&cs=tinysrgb&w=100' },
-    ],
-    total: 12.47,
-    deliveryAddress: '123 Main St, Downtown',
-    deliveryTime: '25-35 min',
+    name: 'Burger Farsh',
+    price: 13.00,
+    quantity: 2,
+    weight: '230g',
+    image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=200',
   },
   {
     id: '2',
-    status: 'delivered',
-    orderNumber: 'GD001235',
-    date: '2025-01-13',
-    shop: 'Daily Dairy',
-    items: [
-      { name: 'Greek Yogurt', quantity: 2, price: 3.99, image: 'https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=100' },
-      { name: 'Whole Milk', quantity: 1, price: 2.50, image: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=100' },
-    ],
-    total: 10.48,
-    deliveryAddress: '123 Main St, Downtown',
-    deliveryTime: 'Delivered',
-    rating: 4.5,
+    name: 'Chicken burger',
+    price: 5.30,
+    quantity: 1,
+    weight: '220g',
+    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=200',
   },
   {
     id: '3',
-    status: 'delivered',
-    orderNumber: 'GD001236',
-    date: '2025-01-12',
-    shop: 'Farm Fresh',
-    items: [
-      { name: 'Mixed Vegetables', quantity: 1, price: 5.99, image: 'https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=100' },
-    ],
-    total: 5.99,
-    deliveryAddress: '123 Main St, Downtown',
-    deliveryTime: 'Delivered',
-    rating: 4.8,
+    name: 'Burger Corporate',
+    price: 6.00,
+    quantity: 1,
+    weight: '260g',
+    image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=200',
   },
 ];
 
-const getStatusColor = (status: Order['status']) => {
-  switch (status) {
-    case 'pending': return '#F59E0B';
-    case 'confirmed': return '#3B82F6';
-    case 'preparing': return '#8B5CF6';
-    case 'out_for_delivery': return '#10B981';
-    case 'delivered': return '#059669';
-    case 'cancelled': return '#EF4444';
-    default: return '#6B7280';
-  }
-};
+export default function CartScreen() {
+  const [items, setItems] = useState<CartItem[]>(cartItems);
+  const [promoCode, setPromoCode] = useState('');
 
-const getStatusText = (status: Order['status']) => {
-  switch (status) {
-    case 'pending': return 'Order Placed';
-    case 'confirmed': return 'Confirmed';
-    case 'preparing': return 'Preparing';
-    case 'out_for_delivery': return 'Out for Delivery';
-    case 'delivered': return 'Delivered';
-    case 'cancelled': return 'Cancelled';
-    default: return status;
-  }
-};
+  const updateQuantity = (id: string, change: number) => {
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id
+          ? { ...item, quantity: Math.max(0, item.quantity + change) }
+          : item
+      ).filter(item => item.quantity > 0)
+    );
+  };
 
-export default function OrdersScreen() {
-  const [selectedTab, setSelectedTab] = useState<'active' | 'history'>('active');
+  const removeItem = (id: string) => {
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
+  };
 
-  const activeOrders = mockOrders.filter(order => 
-    ['pending', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status)
-  );
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const deliveryFee = 2.50;
+  const total = subtotal + deliveryFee;
 
-  const orderHistory = mockOrders.filter(order => 
-    ['delivered', 'cancelled'].includes(order.status)
-  );
-
-  const renderOrderItem = (order: Order) => (
-    <TouchableOpacity key={order.id} style={styles.orderCard}>
-      <View style={styles.orderHeader}>
-        <View style={styles.orderInfo}>
-          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
-          <View style={styles.statusContainer}>
-            <View style={[
-              styles.statusDot,
-              { backgroundColor: getStatusColor(order.status) }
-            ]} />
-            <Text style={[
-              styles.statusText,
-              { color: getStatusColor(order.status) }
-            ]}>
-              {getStatusText(order.status)}
-            </Text>
+  const renderCartItem = (item: CartItem) => (
+    <View key={item.id} style={styles.cartItem}>
+      <Image source={{ uri: item.image }} style={styles.itemImage} />
+      <View style={styles.itemContent}>
+        <View style={styles.itemHeader}>
+          <View style={styles.itemInfo}>
+            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemWeight}>{item.weight}</Text>
           </View>
-        </View>
-        <Text style={styles.orderDate}>{order.date}</Text>
-      </View>
-
-      <View style={styles.shopInfo}>
-        <ShoppingBag size={16} color="#6B7280" />
-        <Text style={styles.shopName}>{order.shop}</Text>
-      </View>
-
-      <View style={styles.itemsContainer}>
-        {order.items.map((item, index) => (
-          <View key={index} style={styles.orderItem}>
-            <Image source={{ uri: item.image }} style={styles.itemImage} />
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
-            </View>
-            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.orderFooter}>
-        <View style={styles.deliveryInfo}>
-          <MapPin size={14} color="#6B7280" />
-          <Text style={styles.deliveryAddress}>{order.deliveryAddress}</Text>
-        </View>
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalAmount}>${order.total.toFixed(2)}</Text>
-        </View>
-      </View>
-
-      {order.status === 'out_for_delivery' && (
-        <View style={styles.trackingContainer}>
-          <Clock size={16} color="#10B981" />
-          <Text style={styles.trackingText}>Arriving in {order.deliveryTime}</Text>
-        </View>
-      )}
-
-      {order.status === 'delivered' && (
-        <View style={styles.deliveredActions}>
-          <TouchableOpacity style={styles.rateButton}>
-            <Star size={16} color="#F59E0B" />
-            <Text style={styles.rateText}>
-              {order.rating ? `Rated ${order.rating}★` : 'Rate Order'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.reorderButton}>
-            <Repeat size={16} color="#10B981" />
-            <Text style={styles.reorderText}>Reorder</Text>
+          <TouchableOpacity 
+            style={styles.removeButton}
+            onPress={() => removeItem(item.id)}
+          >
+            <X size={16} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
-      )}
-    </TouchableOpacity>
+        <View style={styles.itemFooter}>
+          <View style={styles.quantityContainer}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => updateQuantity(item.id, -1)}
+            >
+              <Minus size={16} color="#000000" />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{item.quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => updateQuantity(item.id, 1)}
+            >
+              <Plus size={16} color="#000000" />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+        </View>
+      </View>
+    </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>My Orders</Text>
+        <TouchableOpacity style={styles.backButton}>
+          <ArrowLeft size={24} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Cart</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'active' && styles.activeTab
-          ]}
-          onPress={() => setSelectedTab('active')}
-        >
-          <Text style={[
-            styles.tabText,
-            selectedTab === 'active' && styles.activeTabText
-          ]}>
-            Active ({activeOrders.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === 'history' && styles.activeTab
-          ]}
-          onPress={() => setSelectedTab('history')}
-        >
-          <Text style={[
-            styles.tabText,
-            selectedTab === 'history' && styles.activeTabText
-          ]}>
-            History ({orderHistory.length})
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.cartItems}>
+          {items.map(renderCartItem)}
+        </View>
 
-      <ScrollView style={styles.ordersContainer} showsVerticalScrollIndicator={false}>
-        {selectedTab === 'active' ? (
-          activeOrders.length > 0 ? (
-            activeOrders.map(renderOrderItem)
-          ) : (
-            <View style={styles.emptyContainer}>
-              <ShoppingBag size={48} color="#D1D5DB" />
-              <Text style={styles.emptyTitle}>No Active Orders</Text>
-              <Text style={styles.emptyDescription}>
-                You don't have any active orders at the moment.
-              </Text>
+        <View style={styles.promoSection}>
+          <View style={styles.promoContainer}>
+            <View style={styles.promoIcon}>
+              <Text style={styles.promoIconText}>🎫</Text>
             </View>
-          )
-        ) : (
-          orderHistory.length > 0 ? (
-            orderHistory.map(renderOrderItem)
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Clock size={48} color="#D1D5DB" />
-              <Text style={styles.emptyTitle}>No Order History</Text>
-              <Text style={styles.emptyDescription}>
-                Your order history will appear here.
-              </Text>
-            </View>
-          )
-        )}
+            <Text style={styles.promoText}>Promo code</Text>
+          </View>
+        </View>
+
+        <View style={styles.summarySection}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Order amount</Text>
+            <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Delivery fee</Text>
+            <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+          </View>
+        </View>
       </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.orderButton}>
+          <Text style={styles.orderButtonText}>Order</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -257,53 +162,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
-    margin: 20,
-    borderRadius: 12,
+  backButton: {
     padding: 4,
   },
-  tab: {
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  placeholder: {
+    width: 32,
+  },
+  content: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
   },
-  activeTab: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  activeTabText: {
-    color: '#1F2937',
-  },
-  ordersContainer: {
-    flex: 1,
+  cartItems: {
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
-  orderCard: {
+  cartItem: {
+    flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
@@ -317,177 +203,140 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  orderHeader: {
+  itemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  itemContent: {
+    flex: 1,
+  },
+  itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  orderInfo: {
-    flex: 1,
-  },
-  orderNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  orderDate: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  shopInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  shopName: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 8,
-  },
-  itemsContainer: {
-    marginBottom: 16,
-  },
-  orderItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  itemImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  itemDetails: {
+  itemInfo: {
     flex: 1,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
-  },
-  itemQuantity: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  itemPrice: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#000000',
+    marginBottom: 2,
   },
-  orderFooter: {
+  itemWeight: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  removeButton: {
+    padding: 4,
+  },
+  itemFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 16,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 4,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  quantityText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginHorizontal: 12,
+  },
+  itemPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  promoSection: {
+    paddingHorizontal: 20,
+    marginVertical: 20,
+  },
+  promoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    padding: 16,
+  },
+  promoIcon: {
+    marginRight: 12,
+  },
+  promoIconText: {
+    fontSize: 20,
+  },
+  promoText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+  },
+  summarySection: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: '#000000',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 12,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
-  deliveryInfo: {
-    flexDirection: 'row',
+  orderButton: {
+    backgroundColor: '#FFA500',
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    flex: 1,
   },
-  deliveryAddress: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 6,
-  },
-  totalContainer: {
-    alignItems: 'flex-end',
-  },
-  totalLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  totalAmount: {
+  orderButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  trackingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-  trackingText: {
-    fontSize: 14,
-    color: '#10B981',
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  deliveredActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  rateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    flex: 1,
-    marginRight: 8,
-  },
-  rateText: {
-    fontSize: 14,
-    color: '#92400E',
-    marginLeft: 6,
-    fontWeight: '500',
-  },
-  reorderButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 8,
-  },
-  reorderText: {
-    fontSize: 14,
-    color: '#10B981',
-    marginLeft: 6,
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyTitle: {
-    fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 20,
+    color: '#FFFFFF',
   },
 });

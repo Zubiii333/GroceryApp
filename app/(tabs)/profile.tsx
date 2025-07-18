@@ -10,7 +10,21 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, MapPin, CreditCard, Bell, Shield, CircleHelp as HelpCircle, Star, Gift, ChevronRight, Settings, LogOut, CreditCard as Edit } from 'lucide-react-native';
+import { 
+  User, 
+  MapPin, 
+  CreditCard, 
+  Bell, 
+  Shield, 
+  CircleHelp as HelpCircle, 
+  Star, 
+  Gift, 
+  ChevronRight, 
+  Settings, 
+  LogOut,
+  Edit3 as Edit,
+  ArrowLeft
+} from 'lucide-react-native';
 
 interface ProfileSection {
   id: string;
@@ -43,7 +57,6 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
-            // Handle logout logic
             console.log('User logged out');
           },
         },
@@ -54,7 +67,7 @@ export default function ProfileScreen() {
   const profileSections: ProfileSection[] = [
     {
       id: 'account',
-      title: 'Account',
+      title: 'Account Settings',
       items: [
         {
           id: 'personal-info',
@@ -64,7 +77,7 @@ export default function ProfileScreen() {
         },
         {
           id: 'addresses',
-          label: 'Saved Addresses',
+          label: 'Delivery Addresses',
           icon: MapPin,
           value: '2 addresses',
           onPress: () => console.log('Addresses'),
@@ -80,7 +93,7 @@ export default function ProfileScreen() {
     },
     {
       id: 'preferences',
-      title: 'Preferences',
+      title: 'App Preferences',
       items: [
         {
           id: 'notifications',
@@ -128,7 +141,7 @@ export default function ProfileScreen() {
     },
     {
       id: 'support',
-      title: 'Support',
+      title: 'Support & Help',
       items: [
         {
           id: 'help',
@@ -163,7 +176,7 @@ export default function ProfileScreen() {
           <Switch
             value={item.switchValue}
             onValueChange={() => item.onPress()}
-            trackColor={{ false: '#D1D5DB', true: '#10B981' }}
+            trackColor={{ false: '#D1D5DB', true: '#FFA500' }}
             thumbColor={item.switchValue ? '#FFFFFF' : '#FFFFFF'}
           />
         ) : (
@@ -180,15 +193,17 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <Edit size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton}>
+          <ArrowLeft size={24} color="#000000" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Profile</Text>
+        <TouchableOpacity style={styles.editButton}>
+          <Edit size={20} color="#000000" />
+        </TouchableOpacity>
+      </View>
 
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* User Info */}
         <View style={styles.userContainer}>
           <View style={styles.userInfo}>
@@ -199,22 +214,24 @@ export default function ProfileScreen() {
             <View style={styles.userDetails}>
               <Text style={styles.userName}>John Doe</Text>
               <Text style={styles.userEmail}>john.doe@email.com</Text>
-              <View style={styles.userStats}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>24</Text>
-                  <Text style={styles.statLabel}>Orders</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>4.8</Text>
-                  <Text style={styles.statLabel}>Rating</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>1,250</Text>
-                  <Text style={styles.statLabel}>Points</Text>
-                </View>
-              </View>
+              <Text style={styles.userPhone}>+1 (555) 123-4567</Text>
+            </View>
+          </View>
+          
+          <View style={styles.userStats}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>24</Text>
+              <Text style={styles.statLabel}>Orders</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>4.8</Text>
+              <Text style={styles.statLabel}>Rating</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>1,250</Text>
+              <Text style={styles.statLabel}>Points</Text>
             </View>
           </View>
         </View>
@@ -259,10 +276,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
+  backButton: {
+    padding: 4,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000000',
   },
   editButton: {
     width: 40,
@@ -275,12 +295,13 @@ const styles = StyleSheet.create({
   userContainer: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingVertical: 24,
     marginBottom: 20,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 20,
   },
   avatar: {
     width: 80,
@@ -292,27 +313,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#000000',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: 16,
+    marginBottom: 2,
+  },
+  userPhone: {
+    fontSize: 14,
+    color: '#6B7280',
   },
   userStats: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingVertical: 16,
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#000000',
+    marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
@@ -322,7 +353,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: '#E5E7EB',
-    marginHorizontal: 16,
   },
   section: {
     marginBottom: 20,
@@ -330,7 +360,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#000000',
     marginBottom: 12,
     paddingHorizontal: 20,
   },
@@ -362,7 +392,7 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     fontSize: 16,
-    color: '#1F2937',
+    color: '#000000',
   },
   itemRight: {
     flexDirection: 'row',

@@ -16,6 +16,9 @@ interface ProductCardProps {
     inStock: boolean;
     category: string;
     discount?: number;
+    unit: string;
+    brand: string;
+    productType: string[];
   };
   onPress?: () => void;
   onAddToCart?: () => void;
@@ -40,6 +43,7 @@ export default function ProductCard({
         <Image source={{ uri: product.image }} style={styles.listImage} />
         <View style={styles.listContent}>
           <Text style={styles.listProductName}>{product.name}</Text>
+          <Text style={styles.listProductBrand}>{product.brand} • {product.unit}</Text>
           <View style={styles.listShopInfo}>
             <MapPin size={12} color="#6B7280" />
             <Text style={styles.listShopName}>{product.shop}</Text>
@@ -108,6 +112,7 @@ export default function ProductCard({
       
       <View style={styles.gridContent}>
         <Text style={styles.gridProductName} numberOfLines={2}>{product.name}</Text>
+        <Text style={styles.gridProductUnit}>{product.unit}</Text>
         
         <View style={styles.gridShopInfo}>
           <MapPin size={10} color="#6B7280" />
@@ -181,6 +186,11 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 4,
     lineHeight: 18,
+  },
+  gridProductUnit: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginBottom: 6,
   },
   gridShopInfo: {
     flexDirection: 'row',
@@ -274,6 +284,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
+    marginBottom: 4,
+  },
+  listProductBrand: {
+    fontSize: 12,
+    color: '#9CA3AF',
     marginBottom: 4,
   },
   listShopInfo: {

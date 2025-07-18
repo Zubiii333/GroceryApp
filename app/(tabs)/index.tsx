@@ -7,157 +7,247 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Platform,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Plus, Bell } from 'lucide-react-native';
-import * as Location from 'expo-location';
+import { Search, Filter, MapPin, Star, Clock, Bell, Plus } from 'lucide-react-native';
+import LocationService from '@/components/LocationService';
+import ProductCard from '@/components/ProductCard';
+import FilterModal from '@/components/FilterModal';
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  originalPrice?: number;
   rating: number;
-  reviews: number;
   image: string;
   shop: string;
   distance: number;
   deliveryTime: string;
   inStock: boolean;
   category: string;
-  weight?: string;
+  discount?: number;
+  unit: string;
+  brand: string;
+  productType: string[];
+}
+
+interface Shop {
+  id: string;
+  name: string;
+  rating: number;
+  distance: number;
+  address: string;
+  deliveryTime: string;
+  image: string;
 }
 
 const categories = [
   { id: 'all', name: 'All' },
-  { id: 'burgers', name: 'Burgers' },
-  { id: 'lunch', name: 'Lunch' },
-  { id: 'chicken', name: 'Chicken' },
-  { id: 'pizza', name: 'Pizza' },
-  { id: 'asian', name: 'Asian' },
+  { id: 'fruits', name: 'Fruits' },
+  { id: 'vegetables', name: 'Vegetables' },
+  { id: 'dairy', name: 'Dairy' },
+  { id: 'beverages', name: 'Beverages' },
+  { id: 'bakery', name: 'Bakery' },
+  { id: 'meat', name: 'Meat' },
+  { id: 'pantry', name: 'Pantry' },
+];
+
+const nearbyShops: Shop[] = [
+  {
+    id: '1',
+    name: 'Fresh Market',
+    rating: 4.8,
+    distance: 0.5,
+    address: '123 Main St',
+    deliveryTime: '15-25 min',
+    image: 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '2',
+    name: 'Green Grocers',
+    rating: 4.6,
+    distance: 0.8,
+    address: '456 Oak Ave',
+    deliveryTime: '20-30 min',
+    image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '3',
+    name: 'City Market',
+    rating: 4.5,
+    distance: 1.2,
+    address: '789 Pine Rd',
+    deliveryTime: '25-35 min',
+    image: 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
 ];
 
 const featuredProducts: Product[] = [
   {
     id: '1',
-    name: "Burger butcher's daughter",
-    price: 6.30,
-    rating: 9.8,
-    reviews: 124,
-    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=400',
-    shop: 'Burger House',
-    distance: 0.8,
+    name: 'Organic Bananas',
+    price: 2.99,
+    originalPrice: 3.49,
+    rating: 4.8,
+    image: 'https://images.pexels.com/photos/2872755/pexels-photo-2872755.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'Fresh Market',
+    distance: 0.5,
     deliveryTime: '15-25 min',
     inStock: true,
-    category: 'burgers',
+    category: 'fruits',
+    discount: 15,
+    unit: 'per lb',
+    brand: 'Organic Valley',
+    productType: ['Organic'],
   },
   {
     id: '2',
-    name: 'Burger Farsh',
-    price: 7.00,
-    rating: 9.5,
-    reviews: 87,
-    image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400',
-    shop: 'Farsh Kitchen',
-    distance: 1.2,
+    name: 'Fresh Milk',
+    price: 4.29,
+    rating: 4.7,
+    image: 'https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'Green Grocers',
+    distance: 0.8,
     deliveryTime: '20-30 min',
     inStock: true,
-    category: 'burgers',
+    category: 'dairy',
+    unit: '1 gallon',
+    brand: 'Farm Fresh',
+    productType: ['Fresh'],
   },
   {
     id: '3',
-    name: 'Chicken burger',
-    price: 5.30,
-    rating: 9.1,
-    reviews: 156,
-    image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400',
-    shop: 'Chicken Corner',
-    distance: 0.5,
-    deliveryTime: '10-20 min',
-    inStock: true,
-    category: 'chicken',
+    name: 'Whole Wheat Bread',
+    price: 3.99,
+    rating: 4.6,
+    image: 'https://images.pexels.com/photos/209206/pexels-photo-209206.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'City Market',
+    distance: 1.2,
+    deliveryTime: '25-35 min',
+    inStock: false,
+    category: 'bakery',
+    unit: '1 loaf',
+    brand: 'Healthy Choice',
+    productType: ['Whole Grain'],
   },
   {
     id: '4',
-    name: 'Burger Corporate',
-    price: 8.50,
-    rating: 7.1,
-    reviews: 203,
-    image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=400',
-    shop: 'Corporate Eats',
-    distance: 1.5,
-    deliveryTime: '25-35 min',
+    name: 'Red Apples',
+    price: 3.49,
+    rating: 4.9,
+    image: 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'Fresh Market',
+    distance: 0.5,
+    deliveryTime: '15-25 min',
     inStock: true,
-    category: 'burgers',
+    category: 'fruits',
+    unit: 'per lb',
+    brand: 'Local Farm',
+    productType: ['Fresh'],
   },
   {
     id: '5',
-    name: 'Burger Blue Cheese',
-    price: 9.20,
-    rating: 8.5,
-    reviews: 98,
-    image: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400',
-    shop: 'Gourmet Burgers',
-    distance: 2.1,
-    deliveryTime: '30-40 min',
+    name: 'Greek Yogurt',
+    price: 5.99,
+    rating: 4.8,
+    image: 'https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'Green Grocers',
+    distance: 0.8,
+    deliveryTime: '20-30 min',
     inStock: true,
-    category: 'burgers',
+    category: 'dairy',
+    unit: '32 oz',
+    brand: 'Greek Gods',
+    productType: ['Organic', 'Protein'],
+  },
+  {
+    id: '6',
+    name: 'Orange Juice',
+    price: 4.79,
+    rating: 4.5,
+    image: 'https://images.pexels.com/photos/1435735/pexels-photo-1435735.jpeg?auto=compress&cs=tinysrgb&w=400',
+    shop: 'City Market',
+    distance: 1.2,
+    deliveryTime: '25-35 min',
+    inStock: true,
+    category: 'beverages',
+    unit: '64 fl oz',
+    brand: 'Tropicana',
+    productType: ['Fresh'],
   },
 ];
+
+interface FilterOptions {
+  category: string;
+  priceRange: [number, number];
+  availability: 'all' | 'in_stock' | 'out_of_stock';
+  distance: number;
+  rating: number;
+  sortBy: 'relevance' | 'price_low' | 'price_high' | 'rating' | 'distance';
+}
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-
-  useEffect(() => {
-    getLocation();
-  }, []);
-
-  const getLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        return;
-      }
-
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
-    } catch (error) {
-      console.error('Error getting location:', error);
-    }
-  };
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [filters, setFilters] = useState<FilterOptions>({
+    category: 'all',
+    priceRange: [0, 100],
+    availability: 'all',
+    distance: 10,
+    rating: 0,
+    sortBy: 'relevance',
+  });
 
   const filteredProducts = featuredProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesAvailability = filters.availability === 'all' || 
+      (filters.availability === 'in_stock' && product.inStock) ||
+      (filters.availability === 'out_of_stock' && !product.inStock);
+    const matchesPrice = product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1];
+    const matchesDistance = product.distance <= filters.distance;
+    const matchesRating = product.rating >= filters.rating;
+    
+    return matchesSearch && matchesCategory && matchesAvailability && matchesPrice && matchesDistance && matchesRating;
   });
 
-  const renderFeaturedProduct = (product: Product) => (
-    <TouchableOpacity key={product.id} style={styles.featuredCard}>
-      <Image source={{ uri: product.image }} style={styles.featuredImage} />
-      <View style={styles.featuredContent}>
-        <Text style={styles.featuredName}>{product.name}</Text>
-        <View style={styles.featuredRating}>
-          <Text style={styles.ratingText}>⭐ {product.rating}</Text>
-          <Text style={styles.reviewsText}>({product.reviews})</Text>
-        </View>
-        <Text style={styles.featuredPrice}>${product.price.toFixed(2)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const handleLocationUpdate = (location: any) => {
+    console.log('Location updated:', location);
+  };
 
-  const renderProductGrid = (product: Product) => (
-    <TouchableOpacity key={product.id} style={styles.gridCard}>
-      <Image source={{ uri: product.image }} style={styles.gridImage} />
-      <View style={styles.gridContent}>
-        <Text style={styles.gridName}>{product.name}</Text>
-        <View style={styles.gridRating}>
-          <Text style={styles.gridRatingText}>⭐ {product.rating}</Text>
-          <Text style={styles.gridReviewsText}>({product.reviews})</Text>
+  const handleAddressUpdate = (address: string) => {
+    setCurrentLocation(address);
+  };
+
+  const handleApplyFilters = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+    setSelectedCategory(newFilters.category);
+  };
+
+  const renderShopCard = ({ item }: { item: Shop }) => (
+    <TouchableOpacity style={styles.shopCard}>
+      <Image source={{ uri: item.image }} style={styles.shopImage} />
+      <View style={styles.shopContent}>
+        <Text style={styles.shopName}>{item.name}</Text>
+        <View style={styles.shopDetails}>
+          <View style={styles.shopRating}>
+            <Star size={12} color="#FFA500" fill="#FFA500" />
+            <Text style={styles.shopRatingText}>{item.rating}</Text>
+          </View>
+          <View style={styles.shopDistance}>
+            <MapPin size={12} color="#6B7280" />
+            <Text style={styles.shopDistanceText}>{item.distance}km</Text>
+          </View>
+          <View style={styles.shopDelivery}>
+            <Clock size={12} color="#6B7280" />
+            <Text style={styles.shopDeliveryText}>{item.deliveryTime}</Text>
+          </View>
         </View>
-        <Text style={styles.gridPrice}>${product.price.toFixed(2)}</Text>
+        <Text style={styles.shopAddress}>{item.address}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -182,19 +272,33 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Location Service */}
+        <LocationService 
+          onLocationUpdate={handleLocationUpdate}
+          onAddressUpdate={handleAddressUpdate}
+        />
+
         {/* Main Title */}
-        <Text style={styles.mainTitle}>What will we{'\n'}order today?</Text>
+        <Text style={styles.mainTitle}>What groceries{'\n'}do you need today?</Text>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#9CA3AF" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search any food"
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        <View style={styles.searchSection}>
+          <View style={styles.searchContainer}>
+            <Search size={20} color="#9CA3AF" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search any product"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity 
+            style={styles.filterButton}
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Filter size={20} color="#000000" />
+          </TouchableOpacity>
         </View>
 
         {/* Categories */}
@@ -222,34 +326,48 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* Hit of the week */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.hitOfWeekHeader}>
-            <Text style={styles.hitOfWeekTitle}>Hit of the week</Text>
-          </View>
-          
-          {filteredProducts.length > 0 && (
-            <TouchableOpacity style={styles.hitOfWeekCard}>
-              <Image 
-                source={{ uri: filteredProducts[0].image }} 
-                style={styles.hitOfWeekImage} 
-              />
-              <View style={styles.hitOfWeekContent}>
-                <Text style={styles.hitOfWeekName}>{filteredProducts[0].name}</Text>
-                <View style={styles.hitOfWeekRating}>
-                  <Text style={styles.hitRatingText}>⭐ {filteredProducts[0].rating}</Text>
-                </View>
-                <Text style={styles.hitOfWeekPrice}>${filteredProducts[0].price.toFixed(2)}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
+        {/* Nearby Shops */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Nearby Grocery Shops</Text>
+          <FlatList
+            data={nearbyShops}
+            renderItem={renderShopCard}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.shopsContainer}
+          />
         </View>
 
-        {/* Products Grid */}
-        <View style={styles.productsGrid}>
-          {filteredProducts.slice(1).map(renderProductGrid)}
+        {/* Featured Products */}
+        <View style={styles.section}>
+          <View style={styles.featuredHeader}>
+            <Text style={styles.sectionTitle}>Available Products</Text>
+            <Text style={styles.resultsCount}>
+              {filteredProducts.length} items found
+            </Text>
+          </View>
+          
+          <View style={styles.productsGrid}>
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                layout="grid"
+                onPress={() => console.log('Product pressed:', product.id)}
+                onAddToCart={() => console.log('Add to cart:', product.id)}
+              />
+            ))}
+          </View>
         </View>
       </ScrollView>
+
+      <FilterModal
+        visible={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
+      />
     </SafeAreaView>
   );
 }
@@ -306,13 +424,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 38,
   },
+  searchSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: 12,
-    marginHorizontal: 20,
-    marginBottom: 20,
     paddingHorizontal: 16,
     height: 50,
   },
@@ -323,6 +446,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#000000',
+  },
+  filterButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
   },
   categoriesContainer: {
     paddingHorizontal: 20,
@@ -346,28 +478,34 @@ const styles = StyleSheet.create({
   categoryTextActive: {
     color: '#FFFFFF',
   },
-  sectionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  section: {
+    marginBottom: 24,
   },
-  hitOfWeekHeader: {
-    backgroundColor: '#FFA500',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-  },
-  hitOfWeekTitle: {
-    fontSize: 12,
+  sectionTitle: {
+    fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#000000',
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
-  hitOfWeekCard: {
+  featuredHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  resultsCount: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  shopsContainer: {
+    paddingHorizontal: 20,
+  },
+  shopCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    marginRight: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -376,135 +514,64 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    width: 280,
+    overflow: 'hidden',
   },
-  hitOfWeekImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    marginRight: 16,
+  shopImage: {
+    width: '100%',
+    height: 120,
   },
-  hitOfWeekContent: {
-    flex: 1,
-    justifyContent: 'center',
+  shopContent: {
+    padding: 16,
   },
-  hitOfWeekName: {
-    fontSize: 18,
+  shopName: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#000000',
-    marginBottom: 4,
-  },
-  hitOfWeekRating: {
     marginBottom: 8,
   },
-  hitRatingText: {
-    fontSize: 14,
-    color: '#6B7280',
+  shopDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  hitOfWeekPrice: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#000000',
+  shopRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  shopRatingText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  shopDistance: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  shopDistanceText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  shopDelivery: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shopDeliveryText: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  shopAddress: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
   productsGrid: {
     paddingHorizontal: 20,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  gridCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  gridImage: {
-    width: '100%',
-    height: 120,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  gridContent: {
-    padding: 12,
-  },
-  gridName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  gridRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  gridRatingText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginRight: 4,
-  },
-  gridReviewsText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  gridPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  featuredCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: 200,
-  },
-  featuredImage: {
-    width: '100%',
-    height: 120,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  featuredContent: {
-    padding: 12,
-  },
-  featuredName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 4,
-  },
-  featuredRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginRight: 4,
-  },
-  reviewsText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  featuredPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
   },
 });

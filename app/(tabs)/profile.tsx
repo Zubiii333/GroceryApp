@@ -10,7 +10,21 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, MapPin, CreditCard, Bell, Shield, CircleHelp as HelpCircle, Star, Gift, ChevronRight, Settings, LogOut, CreditCard as Edit, ArrowLeft } from 'lucide-react-native';
+import { 
+  User, 
+  MapPin, 
+  Bell, 
+  Shield, 
+  CircleHelp as HelpCircle, 
+  Star, 
+  ChevronRight, 
+  Settings, 
+  LogOut, 
+  Edit,
+  Heart,
+  Clock,
+  Bookmark
+} from 'lucide-react-native';
 
 interface ProfileSection {
   id: string;
@@ -63,17 +77,24 @@ export default function ProfileScreen() {
         },
         {
           id: 'addresses',
-          label: 'Delivery Addresses',
+          label: 'Saved Addresses',
           icon: MapPin,
-          value: '2 addresses',
+          value: '3 locations',
           onPress: () => console.log('Addresses'),
         },
         {
-          id: 'payment',
-          label: 'Payment Methods',
-          icon: CreditCard,
-          value: '2 cards',
-          onPress: () => console.log('Payment'),
+          id: 'favorites',
+          label: 'Favorite Products',
+          icon: Heart,
+          value: '12 items',
+          onPress: () => console.log('Favorites'),
+        },
+        {
+          id: 'saved-shops',
+          label: 'Saved Shops',
+          icon: Bookmark,
+          value: '5 shops',
+          onPress: () => console.log('Saved shops'),
         },
       ],
     },
@@ -106,22 +127,21 @@ export default function ProfileScreen() {
       ],
     },
     {
-      id: 'rewards',
-      title: 'Rewards & Benefits',
+      id: 'activity',
+      title: 'Activity & History',
       items: [
         {
-          id: 'loyalty',
-          label: 'Loyalty Points',
-          icon: Star,
-          value: '1,250 points',
-          onPress: () => console.log('Loyalty'),
+          id: 'search-history',
+          label: 'Search History',
+          icon: Clock,
+          onPress: () => console.log('Search history'),
         },
         {
-          id: 'referral',
-          label: 'Refer Friends',
-          icon: Gift,
-          value: 'Earn $5',
-          onPress: () => console.log('Referral'),
+          id: 'viewed-products',
+          label: 'Recently Viewed',
+          icon: Star,
+          value: '24 products',
+          onPress: () => console.log('Recently viewed'),
         },
       ],
     },
@@ -180,9 +200,6 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <ArrowLeft size={24} color="#000000" />
-        </TouchableOpacity>
         <Text style={styles.title}>Profile</Text>
         <TouchableOpacity style={styles.editButton}>
           <Edit size={20} color="#000000" />
@@ -198,26 +215,26 @@ export default function ProfileScreen() {
               style={styles.avatar}
             />
             <View style={styles.userDetails}>
-              <Text style={styles.userName}>John Doe</Text>
-              <Text style={styles.userEmail}>john.doe@email.com</Text>
-              <Text style={styles.userPhone}>+1 (555) 123-4567</Text>
+              <Text style={styles.userName}>Sarah Johnson</Text>
+              <Text style={styles.userEmail}>sarah.johnson@email.com</Text>
+              <Text style={styles.userLocation}>📍 Downtown, City Center</Text>
             </View>
           </View>
           
           <View style={styles.userStats}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>24</Text>
-              <Text style={styles.statLabel}>Orders</Text>
+              <Text style={styles.statNumber}>156</Text>
+              <Text style={styles.statLabel}>Products Found</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>12</Text>
+              <Text style={styles.statLabel}>Saved Shops</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>4.8</Text>
-              <Text style={styles.statLabel}>Rating</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>1,250</Text>
-              <Text style={styles.statLabel}>Points</Text>
+              <Text style={styles.statLabel}>Avg Rating</Text>
             </View>
           </View>
         </View>
@@ -242,7 +259,8 @@ export default function ProfileScreen() {
 
         {/* App Version */}
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>GroceryApp v1.0.0</Text>
+          <Text style={styles.versionText}>GroceryFinder v1.0.0</Text>
+          <Text style={styles.versionSubtext}>Phase 1 - Product Discovery</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -262,12 +280,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
-  backButton: {
-    padding: 4,
-  },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#000000',
   },
   editButton: {
@@ -309,7 +324,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 2,
   },
-  userPhone: {
+  userLocation: {
     fontSize: 14,
     color: '#6B7280',
   },
@@ -334,6 +349,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     color: '#6B7280',
+    textAlign: 'center',
   },
   statDivider: {
     width: 1,
@@ -412,5 +428,10 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 12,
     color: '#9CA3AF',
+    marginBottom: 2,
+  },
+  versionSubtext: {
+    fontSize: 10,
+    color: '#D1D5DB',
   },
 });

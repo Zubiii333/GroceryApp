@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Search, ShoppingCart, User } from 'lucide-react-native';
+import { Home, Search, Store, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -36,11 +36,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="shops"
         options={{
-          title: 'Cart',
+          title: 'Shops',
           tabBarIcon: ({ size, color }) => (
-            <ShoppingCart size={size} color={color} />
+            <Store size={size} color={color} />
           ),
         }}
       />

@@ -10,21 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  User, 
-  MapPin, 
-  Bell, 
-  Shield, 
-  CircleHelp as HelpCircle, 
-  Star, 
-  ChevronRight, 
-  Settings, 
-  LogOut, 
-  Edit,
-  Heart,
-  Clock,
-  Bookmark
-} from 'lucide-react-native';
+import { User, MapPin, Bell, Shield, CircleHelp as HelpCircle, Star, ChevronRight, Settings, LogOut, CreditCard as Edit, Heart, Clock, Bookmark } from 'lucide-react-native';
 
 interface ProfileSection {
   id: string;

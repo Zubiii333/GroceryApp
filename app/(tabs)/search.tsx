@@ -9,7 +9,7 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, ArrowLeft, Grid, List } from 'lucide-react-native';
+import { Search, Filter, ArrowLeft, Grid2x2 as Grid, List } from 'lucide-react-native';
 import ProductCard from '@/components/ProductCard';
 import FilterModal from '@/components/FilterModal';
 

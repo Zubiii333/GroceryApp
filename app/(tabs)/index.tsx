@@ -8,12 +8,14 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, MapPin, Star, Clock, Bell, Plus } from 'lucide-react-native';
-import LocationService from '@/components/LocationService';
+import { Search, Filter, MapPin, Star, Clock, Bell, Navigation } from 'lucide-react-native';
 import ProductCard from '@/components/ProductCard';
 import FilterModal from '@/components/FilterModal';
+import { colors, spacing, dimensions, borderRadius, shadows, typography } from '@/constants/theme';
+import * as Location from 'expo-location';
 
 interface Product {
   id: string;
@@ -192,7 +194,9 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string>('');
+  const [locationLoading, setLocationLoading] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     category: 'all',
     priceRange: [0, 100],
@@ -215,13 +219,53 @@ export default function HomeScreen() {
     return matchesSearch && matchesCategory && matchesAvailability && matchesPrice && matchesDistance && matchesRating;
   });
 
-  const handleLocationUpdate = (location: any) => {
-    console.log('Location updated:', location);
+  const getCurrentLocation = async () => {
+    try {
+      setLocationLoading(true);
+      
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        return;
+      }
+
+      // Get current location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      // Get address from coordinates
+      const addressResult = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (addressResult[0]) {
+        const formattedAddress = formatAddress(addressResult[0]);
+        setCurrentLocation(formattedAddress);
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+    } finally {
+      setLocationLoading(false);
+    }
   };
 
-  const handleAddressUpdate = (address: string) => {
-    setCurrentLocation(address);
+  const formatAddress = (addressObj: Location.LocationGeocodedAddress) => {
+    const parts = [
+      addressObj.name,
+      addressObj.street,
+      addressObj.city,
+      addressObj.region,
+    ].filter(Boolean);
+    return parts.join(', ');
   };
+
+  // Get location on component mount
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   const handleApplyFilters = (newFilters: FilterOptions) => {
     setFilters(newFilters);
@@ -235,15 +279,15 @@ export default function HomeScreen() {
         <Text style={styles.shopName}>{item.name}</Text>
         <View style={styles.shopDetails}>
           <View style={styles.shopRating}>
-            <Star size={12} color="#FFA500" fill="#FFA500" />
+            <Star size={12} color={colors.primary} fill={colors.primary} />
             <Text style={styles.shopRatingText}>{item.rating}</Text>
           </View>
           <View style={styles.shopDistance}>
-            <MapPin size={12} color="#6B7280" />
+            <MapPin size={12} color={colors.textSecondary} />
             <Text style={styles.shopDistanceText}>{item.distance}km</Text>
           </View>
           <View style={styles.shopDelivery}>
-            <Clock size={12} color="#6B7280" />
+            <Clock size={12} color={colors.textSecondary} />
             <Text style={styles.shopDeliveryText}>{item.deliveryTime}</Text>
           </View>
         </View>
@@ -254,110 +298,139 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.userSection}>
-            <Image 
-              source={{ uri: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100' }}
-              style={styles.userAvatar}
-            />
-            <TouchableOpacity style={styles.addButton}>
-              <Plus size={16} color="#000000" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Bell size={24} color="#000000" />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Location Service */}
-        <LocationService 
-          onLocationUpdate={handleLocationUpdate}
-          onAddressUpdate={handleAddressUpdate}
-        />
-
-        {/* Main Title */}
-        <Text style={styles.mainTitle}>What groceries{'\n'}do you need today?</Text>
-
-        {/* Search Bar */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchContainer}>
-            <Search size={20} color="#9CA3AF" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search any product"
-              placeholderTextColor="#9CA3AF"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-          <TouchableOpacity 
-            style={styles.filterButton}
-            onPress={() => setShowFilterModal(true)}
-          >
-            <Filter size={20} color="#000000" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Categories */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
-        >
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryButton,
-                selectedCategory === category.id && styles.categoryButtonActive
-              ]}
-              onPress={() => setSelectedCategory(category.id)}
-            >
-              <Text style={[
-                styles.categoryText,
-                selectedCategory === category.id && styles.categoryTextActive
-              ]}>
-                {category.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Nearby Shops */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nearby Grocery Shops</Text>
-          <FlatList
-            data={nearbyShops}
-            renderItem={renderShopCard}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.shopsContainer}
-          />
-        </View>
-
-        {/* Featured Products */}
-        <View style={styles.section}>
-          <View style={styles.featuredHeader}>
-            <Text style={styles.sectionTitle}>Available Products</Text>
-            <Text style={styles.resultsCount}>
-              {filteredProducts.length} items found
-            </Text>
-          </View>
-          
-          <View style={styles.productsGrid}>
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                layout="grid"
-                onPress={() => console.log('Product pressed:', product.id)}
-                onAddToCart={() => console.log('Add to cart:', product.id)}
+      <StatusBar barStyle="light-content" backgroundColor={colors.text} />
+      <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        {/* Top Section with Black Background */}
+        <View style={styles.topSectionContainer}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.userSection}>
+              <Image 
+                source={{ uri: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100' }}
+                style={styles.userAvatar}
               />
+              <View style={styles.userInfo}>
+                <Text style={styles.greeting}>Good morning</Text>
+                <Text style={styles.userName}>Jubaeir Islam</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.notificationButton}>
+              <Bell size={dimensions.iconLarge} color={colors.textInverse} />
+              <View style={styles.notificationBadge} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Delivery Location */}
+          <View style={styles.deliveryLocationContainer}>
+            <View style={styles.locationInfo}>
+              <MapPin size={16} color={colors.textInverse} />
+              <Text style={styles.deliverToText}> Deliver to</Text>
+              <Text style={styles.locationText}>{currentLocation || 'Getting location...'}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={getCurrentLocation}
+              disabled={locationLoading}
+            >
+              <Navigation size={16} color={colors.textInverse} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <Text style={styles.mainTitle}>What will we{'\n'}order today?</Text>
+            <Text style={styles.subtitle}>Fresh groceries delivered to your door</Text>
+          </View>
+
+          {/* Search Bar */}
+          <View style={styles.searchSection}>
+            <View style={[
+              styles.searchContainer,
+              isSearchFocused && styles.searchContainerFocused
+            ]}>
+              <Search size={20} color={colors.textMuted} style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search any food"
+                placeholderTextColor={colors.textMuted}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                returnKeyType="search"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <TouchableOpacity 
+              style={styles.filterButton}
+              onPress={() => setShowFilterModal(true)}
+            >
+              <Filter size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Categories */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContainer}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === category.id && styles.categoryButtonActive
+                ]}
+                onPress={() => setSelectedCategory(category.id)}
+              >
+                <Text style={[
+                  styles.categoryText,
+                  selectedCategory === category.id && styles.categoryTextActive
+                ]}>
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
             ))}
+          </ScrollView>
+        </View>
+
+        {/* Content Sections with White Background */}
+        <View style={styles.contentContainer}>
+          {/* Nearby Shops */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nearby Grocery Shops</Text>
+            <FlatList
+              data={nearbyShops}
+              renderItem={renderShopCard}
+              keyExtractor={(item) => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.shopsContainer}
+            />
+          </View>
+
+          {/* Featured Products */}
+          <View style={styles.section}>
+            <View style={styles.featuredHeader}>
+              <Text style={styles.sectionTitle}>Available Products</Text>
+              <Text style={styles.resultsCount}>
+                {filteredProducts.length} items found
+              </Text>
+            </View>
+            
+            <View style={styles.productsGrid}>
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  layout="grid"
+                  onPress={() => console.log('Product pressed:', product.id)}
+                  onAddToCart={() => console.log('Add to cart:', product.id)}
+                />
+              ))}
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -375,201 +448,269 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.text, // Black background to fill status bar area
+  },
+
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    backgroundColor: colors.background, // White background for content sections
+    paddingTop: spacing.lg, // Add padding to ensure rounded corners are visible
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  topSectionContainer: {
+    backgroundColor: colors.text, // Black background
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: spacing.xl,
+    paddingTop: spacing.xl, // Padding for content
+    overflow: 'hidden', // Ensure content doesn't overflow the rounded corners
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
   },
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 8,
+    width: dimensions.avatarSize,
+    height: dimensions.avatarSize,
+    borderRadius: borderRadius.avatar,
+    marginRight: spacing.sm,
+    borderWidth: 2,
+    borderColor: colors.border,
   },
-  addButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
+  userInfo: {
+    flexDirection: 'column',
+  },
+  greeting: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.normal,
+    color: colors.textInverse, // White text for black background
+    lineHeight: typography.lineHeight.tight,
+  },
+  userName: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textInverse,
+    lineHeight: typography.lineHeight.normal,
   },
   notificationButton: {
     position: 'relative',
-    padding: 4,
+    padding: spacing.xs,
+    width: dimensions.touchTarget,
+    height: dimensions.touchTarget,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   notificationBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
+    top: spacing.xs,
+    right: spacing.xs,
+    width: spacing.sm,
+    height: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.error,
+  },
+  deliveryLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  locationInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  locationButton: {
+    padding: spacing.xs,
+  },
+  deliverToText: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.primary, // Yellow text
+    marginRight: spacing.sm,
+  },
+  locationText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textInverse, // White text for black background
+    flex: 1,
+  },
+  heroSection: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing['2xl'],
   },
   mainTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#000000',
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    lineHeight: 38,
+    ...typography.styles.title,
+    marginBottom: spacing.sm,
+    color: colors.textInverse, // White text for black background
+  },
+  subtitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.normal,
+    color: colors.textInverse, // White text for black background
+    lineHeight: typography.lineHeight.relaxed,
   },
   searchSection: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
     alignItems: 'center',
   },
   searchContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.input,
+    paddingHorizontal: spacing.lg,
+    height: dimensions.inputHeight,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  searchContainerFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.background,
+    ...shadows.small,
   },
   searchIcon: {
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
-    color: '#000000',
+    fontSize: typography.fontSize.base,
+    color: colors.text, // Keep black text for light background search container
   },
   filterButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
+    width: dimensions.inputHeight,
+    height: dimensions.inputHeight,
+    borderRadius: borderRadius.input,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
+    marginLeft: spacing.md,
   },
   categoriesContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+    marginBottom: spacing.sm, // Add margin to ensure it doesn't touch the rounded corners
   },
   categoryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    marginRight: 12,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.categoryButton,
+    backgroundColor: colors.surface,
+    marginRight: spacing.md,
   },
   categoryButtonActive: {
-    backgroundColor: '#000000',
+    backgroundColor: colors.primary, // Yellow background for active buttons
   },
   categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.textSecondary, // Keep gray text for light background category buttons
   },
   categoryTextActive: {
-    color: '#FFFFFF',
+    color: colors.text, // Black text for yellow background
   },
   section: {
-    marginBottom: 24,
+    marginBottom: spacing['2xl'],
+    backgroundColor: colors.background, // White background for content sections
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000000',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    marginTop: spacing.lg,
   },
   featuredHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
   },
   resultsCount: {
-    fontSize: 14,
-    color: '#6B7280',
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
   },
   shopsContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
   },
   shopCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: 280,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.xl,
+    marginRight: spacing.lg,
+    ...shadows.card,
+    width: dimensions.shopCardWidth,
     overflow: 'hidden',
   },
   shopImage: {
     width: '100%',
-    height: 120,
+    height: dimensions.shopImageHeight,
   },
   shopContent: {
-    padding: 16,
+    padding: spacing.lg,
   },
   shopName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-    marginBottom: 8,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   shopDetails: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   shopRating: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   shopRatingText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 4,
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
   shopDistance: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   shopDistanceText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 4,
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
   shopDelivery: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   shopDeliveryText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 4,
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    marginLeft: spacing.xs,
   },
   shopAddress: {
-    fontSize: 12,
-    color: '#9CA3AF',
+    fontSize: typography.fontSize.xs,
+    color: colors.textMuted,
   },
   productsGrid: {
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.xl,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',

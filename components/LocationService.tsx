@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { MapPin, Navigation } from 'lucide-react-native';
+import { colors, typography, spacing, borderRadius } from '@/constants/theme';
 
 interface LocationServiceProps {
   onLocationUpdate?: (location: Location.LocationObject) => void;
@@ -95,7 +96,7 @@ export default function LocationService({ onLocationUpdate, onAddressUpdate }: L
     return (
       <View style={styles.container}>
         <View style={styles.permissionContainer}>
-          <MapPin size={48} color="#10B981" />
+          <MapPin size={48} color={colors.success} />
           <Text style={styles.permissionTitle}>Location Access Required</Text>
           <Text style={styles.permissionDescription}>
             We need access to your location to show nearby grocery stores and provide accurate delivery estimates.
@@ -111,7 +112,7 @@ export default function LocationService({ onLocationUpdate, onAddressUpdate }: L
   return (
     <View style={styles.locationContainer}>
       <View style={styles.locationInfo}>
-        <MapPin size={16} color="#6B7280" />
+        <MapPin size={16} color={colors.textInverse} />
         <Text style={styles.locationText} numberOfLines={1}>
           {address || 'Getting location...'}
         </Text>
@@ -121,7 +122,7 @@ export default function LocationService({ onLocationUpdate, onAddressUpdate }: L
         onPress={getCurrentLocation}
         disabled={loading}
       >
-        <Navigation size={16} color="#10B981" />
+        <Navigation size={16} color={colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -141,26 +142,26 @@ const styles = StyleSheet.create({
   permissionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.textInverse, // White text for black background
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   permissionDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textInverse, // White text for black background
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
   },
   permissionButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: colors.success,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   permissionButtonText: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -168,11 +169,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    padding: 12,
-    marginHorizontal: 20,
-    marginBottom: 16,
+    backgroundColor: 'transparent', // Transparent background for better visibility
+    padding: spacing.md,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
   },
   locationInfo: {
     flexDirection: 'row',
@@ -180,12 +180,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   locationText: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 8,
+    fontSize: typography.fontSize.sm,
+    color: colors.textInverse, // White text for black background
+    marginLeft: spacing.sm,
     flex: 1,
   },
   updateButton: {
-    padding: 4,
+    padding: spacing.xs,
   },
 });

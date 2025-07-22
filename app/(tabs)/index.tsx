@@ -421,14 +421,15 @@ export default function HomeScreen() {
             </View>
             
             <View style={styles.productsGrid}>
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  layout="grid"
-                  onPress={() => console.log('Product pressed:', product.id)}
-                  onAddToCart={() => console.log('Add to cart:', product.id)}
-                />
+              {filteredProducts.map((product, index) => (
+                <View key={product.id} style={styles.gridItem}>
+                  <ProductCard
+                    product={product}
+                    layout="grid"
+                    onPress={() => console.log('Product pressed:', product.id)}
+                    onAddToCart={() => console.log('Add to cart:', product.id)}
+                  />
+                </View>
               ))}
             </View>
           </View>
@@ -714,5 +715,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  gridItem: {
+    width: '48%',
+    marginBottom: spacing.md,
   },
 });

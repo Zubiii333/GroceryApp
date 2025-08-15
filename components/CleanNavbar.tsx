@@ -12,6 +12,7 @@ import Animated, {
   Easing
 } from 'react-native-reanimated'
 import { navigationStyles, ANIMATION_CONFIG, COLORS } from '../constants/navigation-styles'
+import { useCart } from '@/contexts/CartContext'
 
 interface NavItem {
   id: string
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
 export default function CleanNavbar() {
   const router = useRouter()
   const pathname = usePathname()
+  const { state: cartState } = useCart()
   
   // Determine active index based on current route
   const getActiveIndex = () => {
@@ -103,6 +105,14 @@ export default function CleanNavbar() {
               <View style={navigationStyles.a}>
                 <Animated.View style={[navigationStyles.icon, iconStyle]}>
                   <IconComponent size={24} color={COLORS.clr} />
+                  {/* Cart badge */}
+                  {item.id === 'cart' && cartState.totalItems > 0 && (
+                    <View style={styles.cartBadge}>
+                      <Text style={styles.cartBadgeText}>
+                        {cartState.totalItems > 99 ? '99+' : cartState.totalItems}
+                      </Text>
+                    </View>
+                  )}
                 </Animated.View>
                 <Animated.Text style={[navigationStyles.text, textStyle]}>
                   {item.label}
@@ -119,4 +129,24 @@ export default function CleanNavbar() {
   )
 }
 
+const styles = {
+  cartBadge: {
+    position: 'absolute' as const,
+    top: -4,
+    right: -4,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600' as const,
+    lineHeight: 12,
+  },
+}
  

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Star, Plus, Clock, MapPin } from 'lucide-react-native';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProductCardProps {
   product: {
@@ -31,12 +32,69 @@ export default function ProductCard({
   onAddToCart,
   layout = 'grid' 
 }: ProductCardProps) {
+  const { addItem, getItemQuantity, updateQuantity } = useCart();
+  const quantity = getItemQuantity(product.id);
+
   const handleAddToCart = () => {
     if (product.inStock) {
+      if (quantity === 0) {
+        addItem(product);
+      } else {
+        updateQuantity(product.id, quantity + 1);
+      }
       onAddToCart?.();
     }
   };
 
+  const handleQuantityDecrease = () => {
+    if (quantity > 0) {
+      updateQuantity(product.id, quantity - 1);
+    }
+  };
+
+  const renderAddButton = (size: number, isGrid: boolean = true) => {
+    if (!product.inStock) {
+      return (
+        <View style={[
+          isGrid ? styles.gridAddButton : styles.listAddButton,
+          isGrid ? styles.gridAddButtonDisabled : styles.listAddButtonDisabled
+        ]}>
+          <Plus size={size} color="#9CA3AF" />
+        </View>
+      );
+    }
+
+    if (quantity === 0) {
+      return (
+        <TouchableOpacity
+          style={isGrid ? styles.gridAddButton : styles.listAddButton}
+          onPress={handleAddToCart}
+        >
+          <Plus size={size} color="#FFFFFF" />
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <View style={isGrid ? styles.gridQuantityContainer : styles.listQuantityContainer}>
+        <TouchableOpacity
+          style={isGrid ? styles.gridQuantityButton : styles.listQuantityButton}
+          onPress={handleQuantityDecrease}
+        >
+          <Text style={isGrid ? styles.gridQuantityButtonText : styles.listQuantityButtonText}>−</Text>
+        </TouchableOpacity>
+        <Text style={isGrid ? styles.gridQuantityText : styles.listQuantityText}>
+          {quantity}
+        </Text>
+        <TouchableOpacity
+          style={isGrid ? styles.gridQuantityButton : styles.listQuantityButton}
+          onPress={handleAddToCart}
+        >
+          <Text style={isGrid ? styles.gridQuantityButtonText : styles.listQuantityButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
   if (layout === 'list') {
     return (
       <TouchableOpacity style={styles.listCard} onPress={onPress}>
@@ -138,25 +196,7 @@ export default function ProductCard({
               </Text>
             )}
           </View>
-          <TouchableOpacity
-            style={[
-              styles.gridAddButton,
-              !product.inStock && styles.gridAddButtonDisabled
-            ]}
-            onPress={handleAddToCart}
-            disabled={!product.inStock}
-          >
-            <Plus size={14} color={product.inStock ? '#FFFFFF' : '#9CA3AF'} />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  // Grid Layout Styles
-  gridCard: {
+          {renderAddButton(14, true)}
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     marginBottom: 16,
@@ -252,6 +292,42 @@ const styles = StyleSheet.create({
   },
   gridAddButtonDisabled: {
     backgroundColor: '#E5E7EB',
+  },
+  
+  // Quantity control styles for grid
+  gridQuantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    borderRadius: 14,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    minWidth: 70,
+  },
+  
+  gridQuantityButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  gridQuantityButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 12,
+  },
+  
+  gridQuantityText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginHorizontal: 8,
+    minWidth: 16,
+    textAlign: 'center',
   },
 
   // List Layout Styles
@@ -359,6 +435,42 @@ const styles = StyleSheet.create({
   },
   listAddButtonDisabled: {
     backgroundColor: '#E5E7EB',
+  },
+  
+  // Quantity control styles for list
+  listQuantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    borderRadius: 16,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    minWidth: 80,
+  },
+  
+  listQuantityButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  listQuantityButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 14,
+  },
+  
+  listQuantityText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginHorizontal: 10,
+    minWidth: 20,
+    textAlign: 'center',
   },
 
   // Common Styles

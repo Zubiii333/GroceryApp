@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { View, Text, TouchableOpacity } from "react-native"
-import { Home, User, Store, ShoppingCart, Package } from "lucide-react-native"
+import { Chrome as Home, User, Store, ShoppingCart, Package } from "lucide-react-native"
 import { useRouter, usePathname } from "expo-router"
 import Animated, { 
   useSharedValue, 
